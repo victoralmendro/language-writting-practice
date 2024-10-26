@@ -28,6 +28,7 @@
             font-weight: bold;
         }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
     <h1> Practice your writting with the Random Word Picker</h1>
@@ -39,68 +40,30 @@
     <div class="result" id="resultArea"></div>
 
     <script>
-        const data = {
-            "배웠던 단어": [
-                "세대", "치난 친구", "해결하다", "진정하다", "소중하다", "억양",
-                "중요하다", "우선순위", "밥을 챙겨 먹다", "챙기다", "시차", "시차 적응",
-                "시차 적응을 하다", "상술", "만우절", "장낭치다", "교환하다", "기준",
-                "복근", "실력", "출중하다", "무시하다", "표현하다", "곽 차 있다",
-                "나타내다", "맙소사", "벌떡", "일부러", "임산부", "전철", "참다",
-                "혼나다", "이루어지다", "봐 주다"
-            ],
-            "배웠던 문법": [
-                "명사 + (음)에도 불구다고 ~", "항상 ~동사+지는 않다", "항상 ~동사+는 건 아니다", 
-                "항상 ~형용사+ㄴ/은 건 아니다", "동사+ㄴ/은 적이 없다", "동사+아야/어야/해야 될 것 같다",
-                "동사+아야/어야/해야 된다고 생각하다", "~은/는 | ~ 이/가 + 다고 있다", "동사+은/는 + 듯(이)", 
-                "~ㄴ/은 채(로)", "아무리 + 동사/명사 + 아/어/여 + 도"
-            ]
-        };
+        let data = CONFIG.learn;
 
-        let remainingWords = {};
-        Object.keys(data).forEach(category => {
-            remainingWords[category] = [...data[category]];  // Copy of the lists
-        });
+        for (let index = 0; index < Object.keys(data).length/2; index++) {
+            data = shuffleArray(data);
+        }
+        
+        let remainingWords = [...data];
 
-        function pickWords(numWords, categories, remainingWords) {
+        function pickWords(numWords, allWords) {
             const result = [];
-            const allCategories = Object.keys(remainingWords);
-            let allRemainingWords = [];
-
-            // Prioritize picking from different categories
-            allCategories.forEach(category => {
-                allRemainingWords = allRemainingWords.concat(remainingWords[category]);
-            });
 
             // Ensure that the number of requested words does not exceed the available total
-            numWords = Math.min(numWords, allRemainingWords.length);
+            numWords = Math.min(numWords, remainingWords.length);
 
             let pickedWords = [];
 
-            // First pick from different categories
-            for (let i = 0; i < Math.min(numWords, allCategories.length); i++) {
-                const category = allCategories[i];
-                if (remainingWords[category].length > 0) {
-                    const word = pickWordFromCategory(remainingWords[category]);
-                    result.push({ category, word });
-                    remainingWords[category] = removeWord(remainingWords[category], word);
-                }
-            }
-
             // Pick more words from previously used categories, if necessary
-            for (let i = allCategories.length; i < numWords; i++) {
-                const word = pickWordFromList(allRemainingWords);
-                const wordCategory = findCategory(word, remainingWords);
-                result.push({ category: wordCategory, word });
-                remainingWords[wordCategory] = removeWord(remainingWords[wordCategory], word);
-                allRemainingWords = removeWord(allRemainingWords, word);
+            for (let i = 0; i < numWords; i++) {
+                const word = pickWordFromList(remainingWords);
+                result.push(word);
+                remainingWords = removeWord(remainingWords, word);
             }
 
             return result;
-        }
-
-        function pickWordFromCategory(list) {
-            const randomIndex = Math.floor(Math.random() * list.length);
-            return list[randomIndex];
         }
 
         function pickWordFromList(list) {
@@ -112,24 +75,30 @@
             return list.filter(item => item !== word);
         }
 
-        function findCategory(word, remainingWords) {
-            return Object.keys(remainingWords).find(category => remainingWords[category].includes(word));
-        }
-
         function updateUI(result) {
             const resultArea = document.getElementById('resultArea');
 
             if (result.length === 0) {
                 resultArea.innerText = "There are no more words to pick!";
             } else {
-                resultArea.innerText = result.map(item => `${item.category}: ${item.word}`).join('\n');
+                resultArea.innerText = result.toString().replace(",", "; ");
             }
         }
 
-        // Function usage
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1)); // Random index from 0 to i
+                [array[i], array[j]] = [array[j], array[i]];  // Swap elements
+            }
+            return array;
+        }
+
         document.getElementById('pickWordsBtn').addEventListener('click', () => {
             const numWords = parseInt(document.getElementById('numWords').value);
-            const result = pickWords(numWords, data, remainingWords);
+
+            debugger;
+
+            const result = pickWords(numWords, data);
             updateUI(result);
         });
     </script>
