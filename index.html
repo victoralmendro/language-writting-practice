@@ -106,19 +106,10 @@
     <input type="number" id="numWords" name="numWords" min="1" value="3">
     <button id="pickWordsBtn">Pick Words</button>
     
-    <div class="result" id="resultArea">
+    <div class="result">
         <span id="words-simple"></span>
         <table id="table-words">
-            <!-- <tr>
-                <td class="table-words-item">
-                    <span class="table-words-word">word_to_use</span>
-                    <div class="table-words-button-container">
-                        <button class="table-words-button">push</button>
-                        <button class="table-words-button">change</button>
-                        <button class="table-words-button">forget</button>
-                    </div>
-                </td>
-            </tr> -->
+            <tbody></tbody>
         </table>
     </div>
 
@@ -128,11 +119,59 @@
 
         let lastResult = [];
 
+        data = getAvailableWords();
+
         for (let index = 0; index < Object.keys(data).length/2; index++) {
             data = shuffleArray(data);
         }
         
         let remainingWords = [...data];
+
+        function getAvailableWords(){
+            const availableWords = [];
+
+            Object.keys(localStorage).forEach((key) => {
+                if(key == "version"){
+                    return;
+                }
+
+                const value = localStorage.getItem(key);
+                
+                const objWord = JSON.parse(value) || {};
+
+                if(!objWord.hasOwnProperty("nextReviewDate")){
+                    objWord["nextReviewDate"] = new Date();
+                }
+
+                const reviewDate = new Date(objWord.nextReviewDate);
+
+                if(reviewDate > getDateStartOfDay() && reviewDate < getDateEndOfDay()){
+                    availableWords.push(key);
+                }
+            });
+
+            return availableWords;
+        }
+
+        function getDateStartOfDay(){
+            const d = new Date();
+            d.setHours(0);
+            d.setMinutes(0);
+            d.setSeconds(0);
+            d.setMilliseconds(0);
+
+            return d;
+        }
+
+        function getDateEndOfDay(){
+            const d = new Date();
+            d.setHours(23);
+            d.setMinutes(59);
+            d.setSeconds(59);
+            d.setMilliseconds(59);
+
+            return d;
+        }
 
         function storeWords(arrWords){
             for (let index = 0; index < arrWords.length; index++) {
@@ -180,8 +219,33 @@
             fillElemWordsTable(arrResult);
         }
 
+        function generateNextReviewDate(date, daysToAdd){
+            if (!(date instanceof Date) || isNaN(date)) {
+                throw new Error("O parâmetro 'date' deve ser uma instância válida de Date.");
+            }
+
+            if (typeof daysToAdd !== 'number' || daysToAdd <= 0 || !Number.isInteger(daysToAdd)) {
+                throw new Error("O parâmetro 'daysToAdd' deve ser um número inteiro positivo.");
+            }
+
+            let resultDate = new Date(date);
+            resultDate.setDate(resultDate.getDate() + daysToAdd);
+            
+            return resultDate;            
+        }
+
+        function updateWordNextReviewDate(word, nextReviewDate){
+            const objWord = JSON.parse(localStorage.getItem(word)) || {};
+
+            localStorage.setItem(word, JSON.stringify({
+                ...objWord,
+                nextReviewDate: nextReviewDate
+            }));
+        }
+
         function push(index, word){
-            console.log(`push: ${word}`);
+            const nextReviewDate = generateNextReviewDate(new Date(), 7);
+            updateWordNextReviewDate(word, nextReviewDate);
         }
 
         function change(index, word){
@@ -193,7 +257,8 @@
         }
 
         function forget(index, word){
-            console.log(`forget: ${word}`);
+            const nextReviewDate = generateNextReviewDate(new Date(), 30);
+            updateWordNextReviewDate(word, nextReviewDate);
         }
 
         function fillElemWordsTable(arrResult){
@@ -246,7 +311,7 @@
 
             docFragment.appendChild(tr);
 
-            const tableWords = document.getElementById("table-words");
+            const tableWords = document.getElementById("table-words").getElementsByTagName("tbody")[0];
             tableWords.innerHTML = "";
             tableWords.appendChild(docFragment);
         }
