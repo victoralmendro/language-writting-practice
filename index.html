@@ -74,6 +74,30 @@
         }
     </style>
     <script src="config.js"></script>
+    <script>
+        function processVersion(currentVersion){
+            try {
+                const intCurrentVersion = parseInt(currentVersion);
+                let intStoredVersion = 0;
+
+                const storedVersion = localStorage.getItem("version");
+
+                if(storedVersion){
+                    intStoredVersion = parseInt(storedVersion);
+                }
+
+                if(storedVersion < currentVersion){
+                    //migration here
+                }
+
+                localStorage.setItem("version", currentVersion);
+            } catch (error) {
+                console.error("Failed to update version", error);
+            }
+        }
+
+        processVersion(CONFIG.version);
+    </script>
 </head>
 <body>
     <h1> Practice your writting with the Random Word Picker</h1>
@@ -100,6 +124,8 @@
 
     <script>
         let data = CONFIG.learn;
+        storeWords(data);
+
         let lastResult = [];
 
         for (let index = 0; index < Object.keys(data).length/2; index++) {
@@ -107,6 +133,20 @@
         }
         
         let remainingWords = [...data];
+
+        function storeWords(arrWords){
+            for (let index = 0; index < arrWords.length; index++) {
+                const word = arrWords[index];
+
+                const savedItem = localStorage.getItem(word);
+
+                if(savedItem){
+                    continue;
+                }
+
+                localStorage.setItem(word, "{}");
+            }
+        }
 
         function pickWords(numWords, allWords) {
             const result = [];
