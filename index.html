@@ -68,6 +68,10 @@
             border-right: none;
         }
 
+        .table-words-button:disabled{
+            cursor: not-allowed;
+        }
+
         #words-simple{
             margin-bottom: 15px;
             display: block;
@@ -289,7 +293,10 @@
                 btnPush.type = "button";
                 btnPush.innerText = "push";
                 btnPush.classList.add("table-words-button");
-                btnPush.onclick = ()=>{push(index, word)};
+                btnPush.onclick = (e)=>{
+                    push(index, word);
+                    e.target.setAttribute("disabled", true);
+                };
 
                 const btnChange = document.createElement("button");
                 btnChange.type = "button";
@@ -301,7 +308,10 @@
                 btnForget.type = "button";
                 btnForget.classList.add("table-words-button");
                 btnForget.innerText = "forget";
-                btnForget.onclick = ()=>{forget(index, word)};
+                btnForget.onclick = (e)=>{
+                    forget(index, word);
+                    e.target.setAttribute("disabled", true);
+                };
 
                 divBtnContainer.appendChild(btnPush);
                 divBtnContainer.appendChild(btnChange);
