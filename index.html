@@ -26,6 +26,51 @@
             margin-top: 20px;
             font-size: 18px;
             font-weight: bold;
+            max-width: 100%;
+            overflow: auto;
+        }
+
+        #table-words{
+            border-collapse: collapse;
+        }
+
+        .table-words-word{
+            display: block;
+            border-bottom: 1px;
+            border-bottom-color: black;
+            border-bottom-style: solid;
+            padding: 5px;
+        }
+
+        .table-words-item{
+            text-align: center;
+            border: 1px solid black;
+            padding: 0;
+            margin: 0;
+        }
+
+        .table-words-button-container{
+            display: flex;
+        }
+
+        .table-words-button{
+            border-right: 1px;
+            border-right-color: black;
+            border-right-style: solid;
+            background-color: #666666;
+            flex: 1;
+        }
+        .table-words-button:hover{
+            background-color: #333333;
+        }
+
+        .table-words-button:last-child{
+            border-right: none;
+        }
+
+        #words-simple{
+            margin-bottom: 15px;
+            display: block;
         }
     </style>
     <script src="config.js"></script>
@@ -37,10 +82,25 @@
     <input type="number" id="numWords" name="numWords" min="1" value="3">
     <button id="pickWordsBtn">Pick Words</button>
     
-    <div class="result" id="resultArea"></div>
+    <div class="result" id="resultArea">
+        <span id="words-simple"></span>
+        <table id="table-words">
+            <!-- <tr>
+                <td class="table-words-item">
+                    <span class="table-words-word">word_to_use</span>
+                    <div class="table-words-button-container">
+                        <button class="table-words-button">push</button>
+                        <button class="table-words-button">change</button>
+                        <button class="table-words-button">forget</button>
+                    </div>
+                </td>
+            </tr> -->
+        </table>
+    </div>
 
     <script>
         let data = CONFIG.learn;
+        let lastResult = [];
 
         for (let index = 0; index < Object.keys(data).length/2; index++) {
             data = shuffleArray(data);
@@ -75,13 +135,89 @@
             return list.filter(item => item !== word);
         }
 
-        function updateUI(result) {
-            const resultArea = document.getElementById('resultArea');
+        function updateUI(arrResult) {
+            fillElemWordsSimple(arrResult);
+            fillElemWordsTable(arrResult);
+        }
 
-            if (result.length === 0) {
-                resultArea.innerText = "There are no more words to pick!";
+        function push(index, word){
+            console.log(`push: ${word}`);
+        }
+
+        function change(index, word){
+            const newWord = pickWords(1, remainingWords);
+
+            lastResult[index] = newWord;
+
+            updateUI(lastResult);
+        }
+
+        function forget(index, word){
+            console.log(`forget: ${word}`);
+        }
+
+        function fillElemWordsTable(arrResult){
+            const docFragment = document.createDocumentFragment();
+
+            const tr = document.createElement("tr");
+
+            for (let index = 0; index < arrResult.length; index++) {
+                const word = arrResult[index];
+                
+                const tdWordsItem = document.createElement("td");
+                tdWordsItem.classList.add("table-words-item");
+
+                tr.appendChild(tdWordsItem);
+
+                const spanWord = document.createElement("span");
+                spanWord.classList.add("table-words-word");
+                spanWord.innerText = word;
+
+                tdWordsItem.appendChild(spanWord);
+
+                const divBtnContainer = document.createElement("div");
+                divBtnContainer.classList.add("table-words-button-container");
+                
+                tdWordsItem.appendChild(divBtnContainer);
+                
+                const btnPush = document.createElement("button");
+                btnPush.type = "button";
+                btnPush.innerText = "push";
+                btnPush.classList.add("table-words-button");
+                btnPush.onclick = ()=>{push(index, word)};
+
+                const btnChange = document.createElement("button");
+                btnChange.type = "button";
+                btnChange.innerText = "change";
+                btnChange.classList.add("table-words-button");
+                btnChange.onclick = ()=>{change(index, word)};
+
+                const btnForget = document.createElement("button");
+                btnForget.type = "button";
+                btnForget.classList.add("table-words-button");
+                btnForget.innerText = "forget";
+                btnForget.onclick = ()=>{forget(index, word)};
+
+                divBtnContainer.appendChild(btnPush);
+                divBtnContainer.appendChild(btnChange);
+                divBtnContainer.appendChild(btnForget);
+
+            }
+
+            docFragment.appendChild(tr);
+
+            const tableWords = document.getElementById("table-words");
+            tableWords.innerHTML = "";
+            tableWords.appendChild(docFragment);
+        }
+
+        function fillElemWordsSimple(arrResult){
+            const elemWordsSimples = document.getElementById('words-simple');
+
+            if (arrResult.length === 0) {
+                elemWordsSimples.innerText = "There are no more words to pick!";
             } else {
-                resultArea.innerText = result.toString().replace(",", "; ");
+                elemWordsSimples.innerText = arrResult.toString().replaceAll(",", "; ");
             }
         }
 
@@ -96,9 +232,9 @@
         document.getElementById('pickWordsBtn').addEventListener('click', () => {
             const numWords = parseInt(document.getElementById('numWords').value);
 
-            debugger;
-
             const result = pickWords(numWords, data);
+            lastResult = result;
+
             updateUI(result);
         });
     </script>
