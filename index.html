@@ -119,6 +119,7 @@
 
     <script>
         let data = CONFIG.learn;
+        removeUnconfiguredWords(data);
         storeWords(data);
 
         let lastResult = [];
@@ -176,6 +177,20 @@
 
             return d;
         }
+
+        /**
+         * @param {string[]} currentWords
+         */
+        function removeUnconfiguredWords(currentWords){
+            const storageKeys = Object.keys(localStorage);
+            storageKeys.forEach(inStorageWord => {
+                const foundWord = currentWords.find(word => word == inStorageWord);
+                if(!foundWord){
+                    localStorage.removeItem(inStorageWord);
+                }
+            });
+        }
+
 
         function storeWords(arrWords){
             for (let index = 0; index < arrWords.length; index++) {
